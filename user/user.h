@@ -2,6 +2,29 @@
 
 struct stat;
 
+// user types 
+typedef unsigned int    uint;
+typedef unsigned short  ushort;
+typedef unsigned char   uchar;
+
+typedef char            int8_t;
+typedef short           int16_t;
+typedef int             int32_t;
+// typedef long long       int64_t;
+
+typedef unsigned char   uint8_t;
+typedef unsigned short  uint16_t;
+typedef unsigned int    uint32_t;
+// typedef unsigned long   uint64_t;
+
+typedef unsigned long   size_t;
+typedef long            ssize_t;
+
+typedef unsigned char   bool;           
+
+#define true            1
+#define false           0
+
 // system calls
 int fork(void);
 int exit(int) __attribute__((noreturn));
@@ -43,7 +66,9 @@ char* sbrklazy(int);
 // printf.c
 void fprintf(int, const char*, ...) __attribute__ ((format (printf, 2, 3)));
 void printf(const char*, ...) __attribute__ ((format (printf, 1, 2)));
+void putchar(char c);
 
 // umalloc.c
 void* malloc(uint);
 void free(void*);
+

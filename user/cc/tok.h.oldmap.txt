@@ -1,0 +1,72 @@
+
+
+static inline TOK lookup_bigop(const char *p, size_t len)
+{
+    if (len < 2) return TOK_EOF;
+
+    switch (p[0])
+    {
+        case '=':
+            if (p[1] == '=') return TOK_EQUAL;
+            break;
+
+        case '!':
+            if (p[1] == '=') return TOK_NEQUAL;
+            break;
+
+        case '<':
+            if (p[1] == '=') return TOK_LEQUAL;
+            if (p[1] == '<') {
+                if (len >= 3 && p[2] == '=') return TOK_LSHIFTEQUAL;
+                return TOK_LSHIFT;
+            }
+            break;
+
+        case '>':
+            if (p[1] == '=') return TOK_GEQUAL;
+            if (p[1] == '>') {
+                if (len >= 3 && p[2] == '=') return TOK_RSHIFTEQUAL;
+                return TOK_RSHIFT;
+            }
+            break;
+
+        case '+':
+            if (p[1] == '=') return TOK_PLUSEQUAL;
+            if (p[1] == '+') return TOK_PLUSPLUS;
+            break;
+
+        case '-':
+            if (p[1] == '=') return TOK_MINUSEQUAL;
+            if (p[1] == '-') return TOK_MINUSMINUS;
+            if (p[1] == '>') return TOK_RSINGLEARROW;
+            break;
+
+        case '*':
+            if (p[1] == '=') return TOK_TIMESEQUAL;
+            break;
+
+        case '/':
+            if (p[1] == '=') return TOK_DIVIDEEQUAL;
+            break;
+
+        case '%':
+            if (p[1] == '=') return TOK_MODEQUAL;
+            break;
+
+        case '&':
+            if (p[1] == '=') return TOK_ANDEQUAL;
+            if (p[1] == '&') return TOK_ANDAND;
+            break;
+
+        case '|':
+            if (p[1] == '=') return TOK_OREQUAL;
+            if (p[1] == '|') return TOK_OROR;
+            break;
+
+        case '^':
+            if (p[1] == '=') return TOK_XOREQUAL;
+            break;
+    }
+
+    return TOK_EOF;
+}

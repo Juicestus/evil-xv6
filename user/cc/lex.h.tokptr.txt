@@ -1,0 +1,175 @@
+#ifndef _CC_LEX_H_
+#define _CC_LEX_H_
+
+#include "user/cc/util.h"
+#include "user/cc/tok.h"
+#include "user/user.h"
+
+#define MAX_IDENT_LEN   256
+#define MAX_NUM_LEN     256
+
+struct lex {
+    char*   src;
+    char    curchr;
+    char    nextchr;
+    size_t  index;      // size_t?
+    size_t  end;
+    tok_t*  token;
+};
+typedef struct lex lex_t;
+
+#define LEX_TOKEN(L)    (L->token)
+
+int lex_init(lex_t* l, const char* src);
+int lex_free(lex_t* l);
+char lex_nextchr(lex_t* l);
+pos_t lex_location(lex_t* l) ;
+bool lex_tok_oneline_comment(lex_t* l);
+bool lex_tok_multiline_comment(lex_t* l);
+tok_t* lex_nexttok(lex_t* l);
+bool lex_tok_kwd(lex_t* l);
+bool lex_tok_numeric(lex_t* l);
+bool lex_tok_str(lex_t* l);
+bool lex_tok_elem(lex_t* l);
+
+// impl:
+
+int lex_init(lex_t* l, const char* src)
+{
+    l->end = strlen(src);
+#ifdef LEX_USE_RAW_SRC
+#else
+    l->src = (char*)malloc(l->end+1);  // todo: catch malloc fail
+    l->src[l->end] = 0;
+    strcpy(l->src, src);
+#endif
+    // nextchr
+    return 0;
+}
+
+int lex_free(lex_t* l)
+{
+#ifdef LEX_USE_RAW_SRC
+#else
+    free((void*)l->src);
+#endif
+    return 0;
+}
+
+char lex_nextchr(lex_t* l)
+{
+    char last = l->curchr;
+    l->curchr = l->nextchr;
+    l->nextchr = (l->index < l->end) ? l->src[l->index++] : 0;
+    return last;
+}
+
+pos_t lex_location(lex_t* l) 
+{
+    pos_t pos = {0};
+    for (int i = 0; i < l->index - 1; i++) 
+    {
+        pos.col++;
+        if (i < l->end && l->src[i] == '\n') 
+        {
+            pos.line++;
+            pos.col = 0;
+        }
+    }
+    return pos;
+}
+
+// auto shutdown
+// test everything
+// plex data
+// performance 
+
+bool lex_tok_oneline_comment(lex_t* l) 
+{
+    if (l->curchr != '/' || l->nextchr != '/') 
+        return false;
+    while (l->curchr && l->curchr != '\n')
+        lex_nextchr(l);
+    lex_nextchr(l);    
+    return true;
+}
+
+bool lex_tok_multiline_comment(lex_t* l)
+{
+    if (l->curchr != '/' || l->nextchr != '*') 
+        return false;
+    while (l->curchr && (l->curchr != '*' || l->nextchr != '/'))
+        lex_nextchr(l);    
+    lex_nextchr(l);    
+    lex_nextchr(l);    
+    return true;
+}
+
+tok_t* lex_nexttok(lex_t* l)
+{
+    l->token = (tok_t*)malloc(sizeof(tok_t));
+
+    while (l->curchr && iswhitespace(l->curchr))
+    {
+        lex_nextchr(l);
+    }
+    if (lex_tok_oneline_comment(l) || lex_tok_multiline_comment(l))
+    {
+        return lex_nexttok(l);
+    }
+
+    l->token->pos = lex_location(l);
+
+    int k = lex_tok_kwd(l)
+    || lex_tok_numeric(l)
+    || lex_tok_str(l)
+    || lex_tok_elem(l);
+    (void)k;
+
+    return l->token;
+}
+
+bool lex_tok_kwd(lex_t* l)
+{
+    if (!isalpha(l->curchr))    
+        return false;
+
+    l->token->data = (char*)malloc(MAX_IDENT_LEN);
+    int i;
+    for (i = 0; i < MAX_IDENT_LEN && (isalpha(l->curchr) || isnumeric(l->curchr)); i++)
+    {
+        l->token->data[i] = lex_nextchr(l);
+    }
+    l->token->data[i] = 0;
+    if ((l->token->type = lookup_kwd(l->token->data, i)) != TOK_ID)
+    {
+        free(l->token->data);      // optional
+        l->token->data = "";       // optional
+    }
+
+    return true;
+}
+
+bool lex_tok_numeric(lex_t* l)
+{
+    // if (!isnumeric(l->curchr)) 
+    //     return false;
+    // bool ishex = false;
+    // if (curchr == '0')  
+    // {
+
+    // }
+    return 0;
+}
+
+bool lex_tok_str(lex_t* l)
+{
+    return 0;
+}
+
+bool lex_tok_elem(lex_t* l)
+{
+    return 0;
+}
+
+#endif
